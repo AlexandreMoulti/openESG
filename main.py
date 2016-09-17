@@ -40,3 +40,15 @@ class BlackScholes(object):
         mu = hv.mean()/time_interval
         sigma = hv.std()/time_interval
         return(cls(mu, sigma))
+    
+    @classmethod
+    def from_call(cls, call_contracts):
+        """ to be done
+        """
+        return(cls(mu=0, sigma=1)
+    
+    @classmethod
+    def from_put(cls, put_contracts):
+        """ to be done
+        """
+        return(cls(mu=0, sigma=1)
