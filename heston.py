@@ -1,6 +1,90 @@
 import numpy as np
 import scipy as sc
+from scipy.stats import norm
 
+
+class CIR(object):
+    """ CIR mean reverting process
+    """
+    def __init__(self, init, target, speed, vol_of_vol):
+        self.init       = init
+        self.target     = target
+        self.speed      = speed
+        self.vol_of_vol = vol_of_vol
+
+    def mean(self, init, dt):
+        """ mean of the process at time t
+        """
+        return(self.target+(init-self.taget)*np.exp(-self.speed*dt))
+
+    def variance(self, init, dt):
+        """ variance of the process at time t
+        """
+        res = init*self.vol_of_vol*self.vol_of_vol*np.exp(-self.speed*dt)*(1-np.exp(-self.speed*dt))/self.speed
+        res = res + 0.5*self.target*self.vol_of_vol*self.vol_of_vol*(1-np.exp(-self.speed*dt))**2/self.speed
+        return(res)
+
+    def simulate(self, maturity, nb_simulations, nb_steps):
+        #non optimal QE algo
+        #check if works
+        urand     = np.random.uniform(loc=0, scale=1, size=(nb_simulations, nb_steps*maturity))
+        norm_rand = np.random.normal(loc=0, scale=1, size=(nb_simulations, nb_steps*maturity))
+        res       = np.zeros((nb_simulations, nb_steps*maturity+1))
+        res[:, 0] = self.init
+        dt        = 1.0/nb_steps
+        root_dt   = np.sqrt(dt)
+        for j in range(res.shape[1]-1):
+            for i in range(res.shape[0])
+                m  = self.mean(res[i,j], dt)
+                s2 = self.variance(res[i,j], dt)
+                psi = s2/(m*m)  
+                if (psi<1.5):
+                    b2  = 2/psi-1+np.sqrt(2/psi*(1/psi-1))
+                    a   = m/(1+b2)
+                    b   = np.sqrt(b)
+                    res[i,j+1] = a*(b+norm_rand[i,j])**2
+                else:
+                    beta = 2/(m*(psi+1))
+                    p    = (psi-1)/(psi+1)
+                    u    = urand[i,j]
+                    res[i,j+1]  = self.__inverse_psi__(u,p, beta)
+        
+
+    def simulate_integral(self, maturity, nb_simulations, nb_steps):
+        #simulates the integrated variance process as described in Andersen paper
+        #useful for heston
+        return(0)
+        
+    #help tools for CIR class
+    def __inverse_psi__(self, u, p, beta):
+        if 0<=u<=p:
+            return(0)
+        else:
+            return(1/beta*np.log((1-p)/(1-u)))
+
+class HestonModel(object):
+    """ Heston Model
+    """
+
+    def __init__(self, init, rate, dividend, vol_init, target, speed, vol_of_vol ):
+        self.init       = init
+        self.rate       = rate
+        self.dividend   = dividend
+        self.volatility = CIR(vol_init, target, speed, vol_of_vol)
+
+    def simulate(self, maturity, nb_simulations, nb_steps):
+        #to do
+        return(0)
+
+    def call_price(self, maturity, strike):
+        return(0)
+        
+    def put_price(self, maturity, strike):
+        return(0)
+    
+    
+    
+#functions from the matlab code
 
 def chfun_norm(s0, v, r, t, w):
     """ Characteristic function of the Black Scholes model
